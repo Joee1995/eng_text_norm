@@ -146,14 +146,16 @@ _punctuations = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
     ('。', '.'),
     ('！', '!'),
     ('？', '?'),
-    ('[()]', ' '),
-    ('\s*[.]+', '.$'),
-    ('\s*[!]+', '!$'),
-    ('\s*[?]+', '?$'),
-    ('\s*[-]+', '.$'),
+    ('（', '('),
+    ('）', ')'),
+    ('\s*[.]+', '. '),
+    ('\s*[!]+', '! '),
+    ('\s*[?]+', '? '),
+    ('\s+-', ', '),
+    ('-\s+', ', '),
+    ('\s*[-]{2,}', ', '),
     ('\s*,', ', '),
-    ('\s*;', ' ; '),
-    ('\"', ''),
+    ('\s*;', '; '),
 ]]
 
 
@@ -163,21 +165,25 @@ def normalize_punctuations(text):
     return text
 
 
-# Symbols replacement:
-_symbols = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
-    ('&', ' and '),
-    ('\|', ' or '),
-    ('#', ' number '),
-    ('\*', ''),
-]]
-
-
 _time_operator_re = re.compile(r'(\d+\w?)\s*(x|\*)\s*')
 
 
 def normalize_operator(text):
     text = re.sub(_time_operator_re, lambda m: ' '+m.group(1)+' times ', text)
     return text
+
+
+# Symbols replacement:
+_symbols = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
+    (' & ', ' and '),
+    (' \| ', ' or '),
+    (' / ', ' or '),
+    (' \+ ', ' plus '),
+    (' = ', ' equal '),
+    ('$', ''),
+    ('#', ''),
+    ('\*', ''),
+]]
 
 
 def replace_symbols(text):
@@ -230,4 +236,5 @@ def english_cleaners(text):
     text = normalize_operator(text)
     text = replace_symbols(text)
     text = collapse_whitespace(text)
+    text = text.strip()
     return text

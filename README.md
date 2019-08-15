@@ -1,5 +1,5 @@
 # eng-text-norm
-this is a repository for english text normalization.
+this is a repository for english text normalization (no longer maintained).
 
 ## Quick Start ##
 
