@@ -13,10 +13,7 @@ hyperparameter. Some cleaners are English-specific. You'll typically want to use
 import re
 from unidecode import unidecode
 from .numbers import normalize_numbers
-
-
-# Regular expression matching whitespace:
-_whitespace_re = re.compile(r'\s+')
+from .symbols import _characters as vocab
 
 
 # List of (regular expression, replacement) pairs for abbreviations:
@@ -94,14 +91,14 @@ _symbolic_expressions = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in
 ]]
 
 
-def remove_symbolic_expressions(text):
+def replace_symbolic_expressions(text):
     for regex, replacement in _symbolic_expressions:
         text = re.sub(regex, replacement, text)
     return text
 
 
 # List of english symbolic acronym:
-_symbolic_acronym = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
+_symbolic_acronyms = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
     ('can\'t', 'can not'),
     ('cannot', 'can not'),
     ('what\'s', 'what is'),
@@ -115,17 +112,20 @@ _symbolic_acronym = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
     ('that\'s ', ' that is '),
     ('\'d ', ' would '),
     ('\'ll ', ' will '),
+    ('(\d+)l', 'length \\1'),
+    ('(\d+)w', 'width \\1'),
+    ('(\d+)h', 'height \\1')
 ]]
 
 
-def expand_acronym(text):
-    for regex, replacement in _symbolic_acronym:
+def expand_acronyms(text):
+    for regex, replacement in _symbolic_acronyms:
         text = re.sub(regex, replacement, text)
     return text
 
 
 # Remove ordinal:
-_ordinal_re = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
+_ordinal_numbers = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
     ('\(?\d+\)', ''),
     ('\[\d+\]', ''),
     ('\<\d+\>', ''),
@@ -134,7 +134,7 @@ _ordinal_re = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
 
 
 def remove_ordinal(text):
-    for regex, replacement in _ordinal_re:
+    for regex, replacement in _ordinal_numbers:
         text = re.sub(regex, replacement, text)
     return text
 
@@ -148,14 +148,14 @@ _punctuations = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
     ('？', '?'),
     ('（', '('),
     ('）', ')'),
-    ('\s*[.]+', '. '),
-    ('\s*[!]+', '! '),
-    ('\s*[?]+', '? '),
+    ('\s*[.]+\s*', '. '),
+    ('\s*[!]+\s*', '! '),
+    ('\s*[?]+\s*', '? '),
+    ('\s*[-]{2,}\s*', ', '),
     ('\s+-', ', '),
     ('-\s+', ', '),
-    ('\s*[-]{2,}', ', '),
-    ('\s*,', ', '),
-    ('\s*;', '; '),
+    ('\s*,\s*', ', '),
+    ('\s*;\s*', '; '),
 ]]
 
 
@@ -165,29 +165,19 @@ def normalize_punctuations(text):
     return text
 
 
-_time_operator_re = re.compile(r'(\d+\w?)\s*(x|\*)\s*')
-
-
-def normalize_operator(text):
-    text = re.sub(_time_operator_re, lambda m: ' '+m.group(1)+' times ', text)
-    return text
-
-
-# Symbols replacement:
-_symbols = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
-    (' & ', ' and '),
-    (' \| ', ' or '),
-    (' / ', ' or '),
-    (' \+ ', ' plus '),
-    (' = ', ' equal '),
-    ('$', ''),
-    ('#', ''),
-    ('\*', ''),
+_operators = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
+    ('(\d+)\s*[x*]\s*', '\\1 times '),
+    ('\s*\+\s*', ' plus '),
+    ('\s*-\s*', ' minus '),
+    ('\s*=\s*', ' equal '),
+    ('\s*&\s*', ' and '),
+    ('\s*\|\s*', ' or '),
+    ('\s*/\s*', ' or '),
 ]]
 
 
-def replace_symbols(text):
-    for regex, replacement in _symbols:
+def normalize_operators(text):
+    for regex, replacement in _operators:
         text = re.sub(regex, replacement, text)
     return text
 
@@ -200,8 +190,16 @@ def lowercase(text):
     return text.lower()
 
 
+# Regular expression matching whitespace:
+_whitespace_re = re.compile(r'\s+')
+
+
 def collapse_whitespace(text):
     return re.sub(_whitespace_re, ' ', text)
+
+
+def remove_out_vocab(text):
+    return re.sub('[^{}]'.format(vocab), ' ', text)
 
 
 def convert_to_ascii(text):
@@ -226,15 +224,15 @@ def transliteration_cleaners(text):
 def english_cleaners(text):
     '''Pipeline for English eng_text_norm, including number and abbreviation expansion.'''
     text = convert_to_ascii(text)
-    text = remove_symbolic_expressions(text)
+    text = replace_symbolic_expressions(text)
     text = lowercase(text)
-    text = expand_acronym(text)
     text = remove_ordinal(text)
-    # eng_text_norm = expand_numbers(eng_text_norm)
+    text = expand_acronyms(text)
     text = expand_abbreviations(text)
+    text = normalize_operators(text)
+    text = expand_numbers(text)
     text = normalize_punctuations(text)
-    text = normalize_operator(text)
-    text = replace_symbols(text)
     text = collapse_whitespace(text)
+    text = remove_out_vocab(text)
     text = text.strip()
     return text

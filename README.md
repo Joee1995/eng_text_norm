@@ -1,5 +1,7 @@
-# eng-text-norm
+# Eng Text Norm
 this is a repository for english text normalization (no longer maintained).
+
+> Log: use [Joee1995/fraction_to_text](https://github.com/Joee1995/fraction_to_text.git) resolve the bug of coverting fraction to english text.
 
 ## Quick Start ##
 
@@ -26,3 +28,4 @@ proj                     # root of your project
     
     raw_text = 'your raw text'
     text = clearners.english_cleaners(raw_text)
+

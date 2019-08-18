@@ -1,11 +1,15 @@
 import inflect
 import re
+from .fraction import FractionToText
 
 
 _inflect = inflect.engine()
-_fraction_number_re = re.compile(r'()')
 _comma_number_re = re.compile(r'([0-9][0-9\,]+[0-9])')
 _decimal_number_re = re.compile(r'([0-9]+\.[0-9]+)')
+_fraction_number_re = re.compile(r'([0-9]+\s+[0-9]+/[0-9]+)')
+_percentage_re = re.compile(r'([0-9\,]*[0-9]+)%')
+_number_sign_re = re.compile(r'#([0-9\,]*[0-9]+)')
+_number_symbol_re = re.compile(r'no.([0-9\,]*[0-9]+)')
 _pounds_re = re.compile(r'£([0-9\,]*[0-9]+)')
 _dollars_re = re.compile(r'\$([0-9\.\,]*[0-9]+)')
 _ordinal_re = re.compile(r'[0-9]+(st|nd|rd|th)')
@@ -18,6 +22,11 @@ def _remove_commas(m):
 
 def _expand_decimal_point(m):
     return m.group(1).replace('.', ' point ')
+
+
+def _expand_fraction(m):
+    ftt = FractionToText()
+    return ftt.convert(m.group(1))
 
 
 def _expand_dollars(m):
@@ -52,8 +61,12 @@ def _expand_number(m):
 
 def normalize_numbers(text):
     text = re.sub(_comma_number_re, _remove_commas, text)
+    text = re.sub(_percentage_re, r'\1 percents', text)
+    text = re.sub(_number_sign_re, r'number \1', text)
+    text = re.sub(_number_symbol_re, r'number \1', text)
     text = re.sub(_pounds_re, r'\1 pounds', text)
     text = re.sub(_dollars_re, _expand_dollars, text)
+    text = re.sub(_fraction_number_re, _expand_fraction, text)
     text = re.sub(_decimal_number_re, _expand_decimal_point, text)
     text = re.sub(_ordinal_re, _expand_ordinal, text)
     text = re.sub(_number_re, _expand_number, text)
