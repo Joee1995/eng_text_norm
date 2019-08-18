@@ -168,7 +168,6 @@ def normalize_punctuations(text):
 _operators = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
     ('(\d+)\s*[x*]\s*', '\\1 times '),
     ('\s*\+\s*', ' plus '),
-    ('\s*-\s*', ' minus '),
     ('\s*=\s*', ' equal '),
     ('\s*&\s*', ' and '),
     ('\s*\|\s*', ' or '),
