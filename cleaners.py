@@ -12,30 +12,35 @@ hyperparameter. Some cleaners are English-specific. You'll typically want to use
 
 import re
 from unidecode import unidecode
+
 from .numbers import normalize_numbers
 from .symbols import _characters as vocab
 
 
 # List of (regular expression, replacement) pairs for abbreviations:
-_abbreviations = [(re.compile('\\b%s\\.' % x[0], re.IGNORECASE), x[1]) for x in [
-    ('mrs', 'misess'),
-    ('mr', 'mister'),
-    ('dr', 'doctor'),
-    ('st', 'saint'),
-    ('co', 'company'),
-    ('jr', 'junior'),
-    ('maj', 'major'),
-    ('gen', 'general'),
-    ('drs', 'doctors'),
-    ('rev', 'reverend'),
-    ('lt', 'lieutenant'),
-    ('hon', 'honorable'),
-    ('sgt', 'sergeant'),
-    ('capt', 'captain'),
-    ('esq', 'esquire'),
-    ('ltd', 'limited'),
-    ('col', 'colonel'),
-    ('ft', 'fort'),
+_abbreviations = [(re.compile('\s+%s\s+' % x[0], re.IGNORECASE), x[1]) for x in [
+    ('mrs.', 'misess '),
+    ('mr.', 'mister '),
+    ('dr.', 'doctor'),
+    ('st.', 'saint'),
+    ('co.', 'company'),
+    ('jr.', 'junior'),
+    ('maj.', 'major'),
+    ('gen.', 'general'),
+    ('drs.', 'doctors'),
+    ('rev.', 'reverend'),
+    ('lt.', 'lieutenant'),
+    ('hon.', 'honorable'),
+    ('sgt.', 'sergeant'),
+    ('capt.', 'captain'),
+    ('esq.', 'esquire'),
+    ('ltd.', 'limited'),
+    ('col.', 'colonel'),
+    ('ft.', 'fort'),
+    ('e.g.', 'for example, '),
+    ('i.e.', 'in essense, '),
+    ('etc.', 'and so on. '),
+    ('p.s.', 'post scripts, '),
 ]]
 
 
@@ -110,6 +115,7 @@ _symbolic_acronyms = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
     ('she\'s ', ' she is '),
     ('it\'s ', ' it is '),
     ('that\'s ', ' that is '),
+    ('there\'s ', ' there is '),
     ('\'d ', ' would '),
     ('\'ll ', ' will '),
     ('(\d+)l', 'length \\1'),
@@ -125,11 +131,14 @@ def expand_acronyms(text):
 
 
 # Remove ordinal:
-_ordinal_numbers = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
-    ('\(?\d+\)', ''),
-    ('\[\d+\]', ''),
-    ('\<\d+\>', ''),
-    ('\{\d+\}', ''),
+_ordinal_numbers = [(re.compile('\s*%s\s*' % x[0], re.IGNORECASE), x[1]) for x in [
+    ('\(\d\)', ' '),
+    ('\[\d\]', ' '),
+    ('\<\d\>', ' '),
+    ('\{\d\}', ' '),
+    ('\([a-d]\)', ' '),
+    ('\s[a-d]\.', ' '),
+    ('\([iv]+\)', ' '),
 ]]
 
 
@@ -146,16 +155,20 @@ _punctuations = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
     ('。', '.'),
     ('！', '!'),
     ('？', '?'),
+    ('[‘’]', '\''),
+    ('[“”]', '\"'),
     ('（', '('),
     ('）', ')'),
-    ('\s*[.]+\s*', '. '),
-    ('\s*[!]+\s*', '! '),
-    ('\s*[?]+\s*', '? '),
-    ('\s*[-]{2,}\s*', ', '),
-    ('\s+-', ', '),
-    ('-\s+', ', '),
-    ('\s*,\s*', ', '),
-    ('\s*;\s*', '; '),
+    ('\s*[.]+\s*', ' . '),
+    ('\s*[!]+\s*', ' ! '),
+    ('\s*[?]+\s*', ' ? '),
+    ('\s*[-]{2,}\s*', ' , '),
+    ('\s+-', ' , '),
+    ('-\s+', ' , '),
+    ('\s*,\s*', ' , '),
+    ('\s*;\s*', ' ; '),
+    ('[()]', ''),
+    ('\"', ' \" '),
 ]]
 
 
@@ -166,7 +179,7 @@ def normalize_punctuations(text):
 
 
 _operators = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
-    ('(\d+)\s*[x*]\s*', '\\1 times '),
+    ('\s+[x*]\s+', ' times '),
     ('\s*\+\s*', ' plus '),
     ('\s*=\s*', ' equal '),
     ('\s*&\s*', ' and '),
@@ -228,8 +241,8 @@ def english_cleaners(text):
     text = remove_ordinal(text)
     text = expand_acronyms(text)
     text = expand_abbreviations(text)
-    text = normalize_operators(text)
     text = expand_numbers(text)
+    text = normalize_operators(text)
     text = normalize_punctuations(text)
     text = collapse_whitespace(text)
     text = remove_out_vocab(text)
