@@ -118,9 +118,9 @@ _symbolic_acronyms = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
     ('there\'s ', ' there is '),
     ('\'d ', ' would '),
     ('\'ll ', ' will '),
-    ('(\d+)l', 'length \\1'),
-    ('(\d+)w', 'width \\1'),
-    ('(\d+)h', 'height \\1')
+    ('(\d+\.?\d+)l', 'length \\1'),
+    ('(\d+\.?\d+)w', 'width \\1'),
+    ('(\d+\.?\d+)h', 'height \\1')
 ]]
 
 
@@ -136,8 +136,8 @@ _ordinal_numbers = [(re.compile('\s*%s\s*' % x[0], re.IGNORECASE), x[1]) for x i
     ('\[\d\]', ' '),
     ('\<\d\>', ' '),
     ('\{\d\}', ' '),
-    ('\([a-d]\)', ' '),
-    ('\s[a-d]\.', ' '),
+    ('\([a-f]\)', ' '),
+    ('\s[a-f]\.', ' '),
     ('\([iv]+\)', ' '),
 ]]
 
@@ -167,7 +167,7 @@ _punctuations = [(re.compile('%s' % x[0], re.IGNORECASE), x[1]) for x in [
     ('-\s+', ' , '),
     ('\s*,\s*', ' , '),
     ('\s*;\s*', ' ; '),
-    ('[()]', ''),
+    ('[()]', ' '),
     ('\"', ' \" '),
 ]]
 
